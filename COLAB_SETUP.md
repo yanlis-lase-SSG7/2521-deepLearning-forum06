@@ -1,14 +1,62 @@
 # Panduan Menjalankan Forum06 di Google Colab
 
-## Alur Kerja Keseluruhan
+## 🎯 Alur Kerja Keseluruhan
 
 ```
-VS Code (edit) → GitHub (push) → Colab (run GPU) → Drive (checkpoint) → GitHub (push hasil)
+VS Code (edit) → GitHub (push) → Colab GPU (run) → Drive (checkpoint) → GitHub (pull hasil)
 ```
 
 ---
 
-## Step 1: Buka Notebook di Colab
+## 🚀 Pilihan Eksekusi
+
+Anda memiliki **2 opsi** untuk menjalankan notebook dengan GPU Colab:
+
+| Opsi | Tools | Setup | Rekomendasi |
+|------|-------|-------|-------------|
+| **A** (Recommended) | VS Code + Colab Extension | 5 menit | ✅ Tetap di VS Code, lebih seamless |
+| **B** | Browser Colab | 3-5 menit | Alternatif jika opsi A ada masalah |
+
+---
+
+## ✅ OPSI A: Google Colab in VS Code (RECOMMENDED)
+
+### Keuntungan
+- Tetap di VS Code (workflow utama Anda).
+- GUI kernel selector yang elegan.
+- Output langsung di VS Code.
+- Tidak perlu buka tab browser terpisah.
+
+### Step A1: Install Extension
+
+1. Di VS Code, buka **Extensions** (Ctrl+Shift+X).
+2. Cari: `Google Colab`
+3. Install extension resmi dari **Google** (publisher name: Google).
+4. Reload VS Code saat diminta.
+
+### Step A2: Aktifkan Colab Kernel
+
+1. Buka file notebook `Forum06-garbage_classification_question.ipynb` di VS Code.
+2. Klik tombol **Select Kernel** (atas kanan, atau Ctrl+Shift+P → Python: Select Interpreter).
+3. Pilih **Google Colab**.
+4. Sign in dengan akun Google Anda (browser popup akan muncul).
+5. Tunggu kernel initialize (1-2 menit).
+
+### Step A3: Set GPU Runtime
+
+Setelah kernel connected, Colab akan default ke CPU. Ubah ke GPU:
+1. Di VS Code, buka Command Palette (Ctrl+Shift+P).
+2. Ketik: `Colab: Change runtime type`.
+3. Pilih GPU (T4 atau L4 jika ada).
+4. Tunggu kernel restart (1-2 menit).
+
+---
+
+## 🔄 OPSI B: Browser Colab (Fallback)
+
+Jika VS Code extension ada masalah, gunakan browser Colab secara langsung:
+
+### Step B1: Buka Notebook di Colab
 
 1. Buka browser, pergi ke [Google Colab](https://colab.research.google.com/).
 2. Pilih "File" > "Open notebook" > "GitHub".
@@ -18,9 +66,7 @@ VS Code (edit) → GitHub (push) → Colab (run GPU) → Drive (checkpoint) → 
    ```
 4. Cari dan klik `Forum06-garbage_classification_question.ipynb`.
 
----
-
-## Step 2: Ubah Runtime ke GPU
+### Step B2: Ubah Runtime ke GPU
 
 1. Menu atas Colab: **Runtime** > **Change runtime type**.
 2. Pilih:
@@ -32,7 +78,7 @@ Colab akan restart kernel otomatis.
 
 ---
 
-## Step 3: Set Colab Secrets
+## Step 3: Set Colab Secrets (SAMA untuk Opsi A & B)
 
 Notebook Anda sudah disiapkan untuk membaca token dari Colab Secrets. Ikuti langkah di bawah:
 
@@ -59,21 +105,27 @@ Notebook Anda sudah disiapkan untuk membaca token dari Colab Secrets. Ikuti lang
 
 ## Step 4: Jalankan Notebook
 
-1. Mulai dari **Cell 1** (pembuka dokumentasi).
-2. Jalankan cell per cell dengan Shift+Enter atau tombol ► di sebelah kanan cell.
+### Untuk Opsi A (VS Code + Extension)
+1. Cell sudah siap untuk dijalankan dari VS Code.
+2. Klik tombol ▶ (Play) di sebelah kiri cell, atau Shift+Enter.
+3. Output akan muncul langsung di VS Code.
 
-### Alur Eksekusi Penting
+### Untuk Opsi B (Browser Colab)
+1. Klik tombol ▶ (Play) di sebelah cell.
+2. Output akan muncul di browser.
 
-| Cell | Isi | Keterangan |
-|------|-----|-----------|
+### Alur Eksekusi Penting (Sama untuk A & B)
+
+| Cell # | Isi | Keterangan |
+|--------|-----|-----------|
 | 1 | Dokumentasi intro | Markdown, cukup dibaca |
-| 2 | Kaggle token dari Secret | Akan auto-load dari Secrets |
-| 3-5 | Setup hardware (GPU, mixed precision) | **Sangat penting**: pastikan GPU terdeteksi |
+| 2 | Kaggle token dari Secret | Akan auto-load dari Colab Secrets |
+| 3-5 | Setup hardware (GPU, mixed precision) | **Sangat penting**: pastikan GPU terdeteksi ✅ |
 | 6-15 | Download dataset, labeling, EDA | Biarkan selesai, tunggu beberapa menit |
 | 16-42 | Preprocessing, augmentation setup | Siapkan pipeline data |
-| 43-44 | Hugging Face login + load ViT processor | HF token akan auto-load dari Secrets |
-| 45 | Konfigurasi model ViT | **Ganti** `VIT_VARIANT = "base"` atau `"large"` di sini |
-| 46+ | Training + evaluasi | Tunggu selesai (estimasi 30-60 menit untuk vit-base, lebih lama untuk vit-large) |
+| 43-44 | Hugging Face login + load ViT processor | HF token akan auto-load dari Colab Secrets |
+| 45 | Konfigurasi model ViT | **PENTING**: Ganti `VIT_VARIANT = "base"` atau `"large"` |
+| 46+ | Training + evaluasi | Tunggu selesai (~30-60 menit vit-base, lebih lama vit-large) |
 
 ---
 
@@ -105,37 +157,22 @@ Setelah training selesai:
 
 ## Tips & Troubleshooting
 
-### GPU Tidak Terdeteksi
+### Untuk VS Code + Colab Extension (Opsi A)
 
-**Error**: Cell 5 menampilkan "GPU tidak terdeteksi..."
+| Masalah | Solusi |
+|---------|--------|
+| Extension tidak terdeteksi di Marketplace | Upate VS Code ke versi terbaru (v1.90+) |
+| Kernel tidak bisa connect ke Colab | Cek internet, clear cache VS Code, reinstall extension |
+| GPU tidak terdeteksi | Jalankan command `Colab: Change runtime type` pilih GPU ulang |
+| Auth/Sign-in error | Clear cookies browser, sign out, sign in ulang |
 
-**Solusi**: 
-- Pastikan Anda sudah ubah Runtime > Change runtime type > GPU.
-- Coba restart runtime (Runtime > Restart session).
-- Kalau tetap tidak ada, berarti sudah batas GPU Colab Anda hari ini, coba lagi besok.
+### Untuk Browser Colab (Opsi B)
 
-### Token Kaggle/HF Error
+| GPU Tidak Terdeteksi | Opsi A: Jalankan `Colab: Change runtime type` ulang. Opsi B: Runtime > Change runtime type > pilih GPU |
+| Token Kaggle/HF Error | Pastikan Colab Secret sudah ditambah dengan nama tepat & toggle-nya ON (biru) |
 
-**Error**: "Kaggle token belum terdeteksi..." atau "HF token tidak ditemukan..."
-
-**Solusi**:
-- Pastikan Colab Secret sudah ditambah dengan nama tepat: `KAGGLE_API_TOKEN`, `HF_TOKEN`.
-- Pastikan "Notebook access" toggle-nya ON (biru).
-- Reload notebook (F5 atau refresh).
-
-### Koneksi Putus / Sesi Timeout
-
-**Solusi Built-in**:
-- Notebook punya `BackupAndRestore` callback yang auto-save state setiap epoch.
-- Jika sesi putus, jalankan ulang cell training dengan `initial_epoch=CHECKPOINT_EPOCH`.
-- Checkpoint file tetap aman di Google Drive.
-
-### Training Terlalu Lambat
-
-**Opsi**:
-- Ubah `VIT_VARIANT = "base"` (lebih cepat).
-- Kurangi `HEAD_EPOCHS` atau `FINE_TUNE_EPOCHS` di cell training.
-- Kurangi `BATCH_SIZE` ke 16 jika OOM.
+| Koneksi Putus / Sesi Timeout | Notebook punya `BackupAndRestore` callback yang auto-save state. Jalankan ulang cell training dengan `initial_epoch=CHECKPOINT_EPOCH`. |
+| Training Terlalu Lambat | Ubah `VIT_VARIANT = "base"` (lebih cepat). Kurangi `HEAD_EPOCHS` atau `FINE_TUNE_EPOCHS`. Kurangi `BATCH_SIZE` ke 16 jika OOM. |
 
 ---
 
