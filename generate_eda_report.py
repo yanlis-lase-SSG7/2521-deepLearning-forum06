@@ -131,7 +131,16 @@ for cat, (lo, q1, med, q3, hi) in FILE_SIZE_IQR.items():
 
 file_size_df = pd.DataFrame(file_size_data)
 fig3, ax3 = plt.subplots(figsize=(10, 5))
-sns.boxplot(data=file_size_df, x="category", y="file_size_kb", palette="Blues", ax=ax3)
+sns.boxplot(
+    data=file_size_df,
+    x="category",
+    y="file_size_kb",
+    hue="category",
+    palette="Blues",
+    dodge=False,
+    legend=False,
+    ax=ax3,
+)
 ax3.set_title("File Size Distribution per Category (KB)", fontsize=13)
 ax3.set_xlabel("Category")
 ax3.set_ylabel("File Size (KB)")
@@ -229,10 +238,11 @@ html_report = textwrap.dedent(f"""\
 
 <h2>7. Key Observations</h2>
 <ul>
-  <li><strong>Class imbalance:</strong> The <em>trash</em> category is severely underrepresented (137 images vs. a mean of ~478 for the remaining five classes). It is excluded from modelling to prevent label bias.</li>
-  <li><strong>Uniform image dimensions:</strong> All images share a resolution of 512 × 384 px, simplifying the preprocessing pipeline.</li>
-  <li><strong>Visual similarity risk:</strong> The <em>cardboard</em> and <em>paper</em> categories exhibit overlapping colour profiles (high channel means, low saturation), which may increase misclassification probability between these two classes.</li>
-  <li><strong>Glass distinctiveness:</strong> The <em>glass</em> category shows the lowest pixel intensity means across all channels, reflecting the transparent and reflective nature of glass objects.</li>
+    <li><strong>Class imbalance:</strong> The <em>trash</em> category is severely underrepresented (137 images vs. a mean of ~478 for the remaining five classes). It is excluded from modelling to prevent label bias.</li>
+    <li><strong>Uniform image dimensions:</strong> All images share a resolution of 512 × 384 px, simplifying the preprocessing pipeline.</li>
+    <li><strong>EDA-level ambiguity cues:</strong> The sampled colour and texture profile still suggests that <em>cardboard</em> and <em>paper</em> can be visually similar, so this pair remains a reasonable qualitative hypothesis from EDA alone.</li>
+    <li><strong>Main-notebook quantitative validation:</strong> Full test-split evaluation in the main ViT-Large notebook shows that the dominant residual confusion is actually <em>plastic</em> ↔ <em>glass</em>, while <em>paper</em> ↔ <em>cardboard</em> appears but at a lower rate.</li>
+    <li><strong>Glass and plastic difficulty:</strong> The main notebook's confusion matrix reports <em>plastic</em> as the weakest class overall, which is consistent with the challenge of separating transparent and reflective materials under varied lighting and backgrounds.</li>
 </ul>
 
 </main>
