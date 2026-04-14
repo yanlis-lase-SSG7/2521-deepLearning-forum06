@@ -3,20 +3,25 @@
 **Student Name:** Yanlis Alim Sang Putra Lase  
 **Student ID:** 2702751284  
 **Program:** Master's in Informatics, BINUS Graduate Program
+
 This repository contains the implementation and documentation for Forum 06, a deep learning assignment focused on multiclass garbage image classification using transfer learning with Vision Transformer Large (ViT-L/16).
 
 ## 1. Project Overview
+
 This project builds an end-to-end image-classification pipeline for the Kaggle Garbage Classification dataset. The workflow covers dataset access, exploratory data analysis, class filtering, preprocessing, TensorFlow dataset construction, transfer learning, evaluation, and error analysis.
 
 The main model in the notebook is the Hugging Face Vision Transformer checkpoint `google/vit-large-patch16-224`. The notebook does not position this task as a CNN-vs-CNN comparison. Instead, it focuses on how a large pre-trained ViT can be adapted to a relatively small material-recognition dataset and how its residual error patterns should be interpreted quantitatively.
+
 The final executed notebook shows that the model reaches solid overall performance, but its dominant residual confusion is between `plastic` and `glass`, not `cardboard` and `paper` alone.
 
 ## 2. Data Source
+
 The image dataset is obtained from Kaggle:
 
 - **Kaggle dataset:** `asdasdasasdas/garbage-classification`
 
 The raw dataset contains **2,527 images** across **6 categories**:
+
 | No. | Category | Image Count |
 |---|---|---:|
 | 1 | cardboard | 403 |
@@ -27,9 +32,11 @@ The raw dataset contains **2,527 images** across **6 categories**:
 | 6 | trash | 137 |
 
 Because `trash` is severely underrepresented, the main notebook excludes it from modelling. The effective modelling subset therefore contains:
+
 - **2,390 images**
 - **5 categories**: `cardboard`, `glass`, `metal`, `paper`, `plastic`
 - **Uniform source resolution**: `512 x 384`
+
 ## 3. Function and Purpose
 
 The main notebook is designed to perform the following tasks:
@@ -44,6 +51,7 @@ The main notebook is designed to perform the following tasks:
 8. Extend evaluation with a confusion matrix and classification report so the error narrative is supported by full-test quantitative evidence.
 
 ## 4. Expected Output
+
 The main deliverables of this repository are:
 
 1. **A completed main notebook** for garbage classification with ViT-Large.
@@ -51,11 +59,13 @@ The main deliverables of this repository are:
 3. **A generated HTML EDA report** aligned with the main notebook conclusions.
 4. **Training and evaluation outputs** produced from the notebook run.
 5. **A final discussion section** covering challenges, solutions, conclusions, and recommendations.
+
 ### Quick Access: EDA Report (HTML)
 
 - **EDA Report:** [https://yanlis-lase-ssg7.github.io/2521-deepLearning-forum06/EDA_Report_Garbage.html](https://yanlis-lase-ssg7.github.io/2521-deepLearning-forum06/EDA_Report_Garbage.html)
 
 ## 5. Step-by-Step Installation and Usage
+
 Run the following commands in PowerShell from your preferred working directory.
 
 ### 5.1 Git Clone
@@ -97,7 +107,7 @@ Common approaches supported by the notebook and Colab workflow:
 - Colab Secrets
 - interactive fallback prompt
 
-For the Colab-based workflow used for training, see [d:\Project S2\2521\2521-deepLearning-forum06\COLAB_SETUP.md](d:/Project%20S2/2521/2521-deepLearning-forum06/COLAB_SETUP.md).
+For the Colab-based workflow used for training, see [COLAB_SETUP.md](COLAB_SETUP.md).
 
 ### 5.6 Run the Main Notebook
 
@@ -161,28 +171,28 @@ The notebook implements the following modelling setup:
 The full pipeline in the notebook follows this sequence:
 
 1. **Environment and authentication setup**  
-	Resolve package requirements and fetch Kaggle / Hugging Face credentials through a fallback chain.
+   Resolve package requirements and fetch Kaggle / Hugging Face credentials through a fallback chain.
 
 2. **Dataset resolution**  
-	Load the garbage dataset from local cache or Kaggle and inspect available files.
+   Load the garbage dataset from local cache or Kaggle and inspect available files.
 
 3. **Class inspection and filtering**  
-	Confirm that `trash` is severely underrepresented, then remove it from all modelling steps.
+   Confirm that `trash` is severely underrepresented, then remove it from all modelling steps.
 
 4. **Exploratory data analysis**  
-	Inspect class counts, image dimensions, file-size distribution, and sampled channel statistics.
+   Inspect class counts, image dimensions, file-size distribution, and sampled channel statistics.
 
 5. **Preprocessing for ViT**  
-	Resize the shortest side, apply center crop, normalize with ImageNet statistics, and convert tensors to the format expected by the Hugging Face ViT backbone.
+   Resize the shortest side, apply center crop, normalize with ImageNet statistics, and convert tensors to the format expected by the Hugging Face ViT backbone.
 
 6. **Dataset construction**  
-	Build `tf.data.Dataset` pipelines for train, validation, and test splits.
+   Build `tf.data.Dataset` pipelines for train, validation, and test splits.
 
 7. **Two-stage fine-tuning**  
-	Train the classifier head first, then unfreeze the backbone for full fine-tuning with conservative learning rates.
+   Train the classifier head first, then unfreeze the backbone for full fine-tuning with conservative learning rates.
 
 8. **Evaluation and quantitative error analysis**  
-	Report loss and accuracy, then compute a confusion matrix and classification report over the entire test split.
+   Report loss and accuracy, then compute a confusion matrix and classification report over the entire test split.
 
 ## 9. Final Results Snapshot
 

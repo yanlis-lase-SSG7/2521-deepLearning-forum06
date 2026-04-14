@@ -80,7 +80,7 @@ Colab akan restart kernel otomatis.
 
 ## Step 3: Set Colab Secrets (SAMA untuk Opsi A & B)
 
-Notebook Anda sudah disiapkan untuk membaca token dari Colab Secrets. Ikuti langkah di bawah:
+Notebook Anda sudah disiapkan untuk membaca token dari Colab Secrets, tetapi fitur ini hanya aktif bila variabel `ENABLE_COLAB_SECRETS = True` pada notebook diubah dari `False` menjadi `True`. Jika tidak diaktifkan, notebook akan memakai environment variable, file lokal, atau prompt interaktif.
 
 ### 3a. Tambah `KAGGLE_API_TOKEN`
 
@@ -116,16 +116,17 @@ Notebook Anda sudah disiapkan untuk membaca token dari Colab Secrets. Ikuti lang
 
 ### Alur Eksekusi Penting (Sama untuk A & B)
 
-| Cell # | Isi | Keterangan |
+Nomor cell dapat berubah ketika notebook direvisi, jadi ikuti urutan berdasarkan **bagian notebook**, bukan angka cell tetap.
+
+| Bagian | Isi | Keterangan |
 |--------|-----|-----------|
-| 1 | Dokumentasi intro | Markdown, cukup dibaca |
-| 2 | Kaggle token dari Secret | Akan auto-load dari Colab Secrets |
-| 3-5 | Setup hardware (GPU, mixed precision) | **Sangat penting**: pastikan GPU terdeteksi ✅ |
-| 6-15 | Download dataset, labeling, EDA | Biarkan selesai, tunggu beberapa menit |
-| 16-42 | Preprocessing, augmentation setup | Siapkan pipeline data |
-| 43-44 | Hugging Face login + load ViT processor | HF token akan auto-load dari Colab Secrets |
-| 45 | Konfigurasi model ViT | **PENTING**: Ganti `VIT_VARIANT = "base"` atau `"large"` |
-| 46+ | Training + evaluasi | Tunggu selesai (~30-60 menit vit-base, lebih lama vit-large) |
+| Intro + token setup | Dokumentasi awal, helper token Kaggle/HF, logger cell | Jika ingin memakai Colab Secrets, pastikan `ENABLE_COLAB_SECRETS = True` |
+| Hardware setup | Deteksi GPU dan mixed precision | **Sangat penting**: pastikan GPU terdeteksi ✅ |
+| Dataset section | Download dataset, labeling, dan EDA | Biarkan selesai; ini juga menghasilkan `EDA_Report_Garbage.html` dan `EDA_Report_Garbage.ipynb` |
+| Preprocessing + pipeline | Resize/crop, split data, `tf.data.Dataset`, augmentasi | Menyiapkan pipeline train/validation/test |
+| Hugging Face + ViT setup | Login HF, load processor, pilih `VIT_VARIANT` | Default notebook saat ini memakai `"large"` |
+| Training | Stage 1 head warm-up dan Stage 2 fine-tuning | Tunggu selesai; ViT-Large akan lebih lama dari ViT-Base |
+| Evaluation + analysis | Test metrics, confusion matrix, classification report, sample predictions | Bagian ini adalah sumber utama untuk kesimpulan akhir |
 
 ---
 
@@ -133,12 +134,15 @@ Notebook Anda sudah disiapkan untuk membaca token dari Colab Secrets. Ikuti lang
 
 Notebook sudah terlebih dahulu disiapkan dengan checkpoint callbacks:
 
-- **Model terbaik**: `best_vit_model.keras` (berdasarkan validation loss terendah)
+- **Model terbaik**: `best_vit_model.weights.h5` (berdasarkan validation loss terendah)
 - **Weight per epoch**: `vit_epoch_XX.weights.h5`
 - **Training log**: `training_log.csv` (loss, accuracy per epoch)
 - **Backup for recovery**: `backup/` folder (untuk auto-restore jika terputus)
 
-Semua file disimpan ke: `/content/drive/MyDrive/forum06_checkpoints/vit/`
+Semua file disimpan ke:
+
+- Colab: `/content/drive/MyDrive/forum06_checkpoints/vit_large/`
+- Lokal non-Colab fallback: `checkpoints/vit_large/`
 
 ---
 
@@ -161,7 +165,7 @@ Setelah training selesai:
 
 | Masalah | Solusi |
 |---------|--------|
-| Extension tidak terdeteksi di Marketplace | Upate VS Code ke versi terbaru (v1.90+) |
+| Extension tidak terdeteksi di Marketplace | Update VS Code ke versi terbaru (v1.90+) |
 | Kernel tidak bisa connect ke Colab | Cek internet, clear cache VS Code, reinstall extension |
 | GPU tidak terdeteksi | Jalankan command `Colab: Change runtime type` pilih GPU ulang |
 | Auth/Sign-in error | Clear cookies browser, sign out, sign in ulang |
@@ -170,9 +174,10 @@ Setelah training selesai:
 
 | GPU Tidak Terdeteksi | Opsi A: Jalankan `Colab: Change runtime type` ulang. Opsi B: Runtime > Change runtime type > pilih GPU |
 | Token Kaggle/HF Error | Pastikan Colab Secret sudah ditambah dengan nama tepat & toggle-nya ON (biru) |
-
+| Token tetap tidak terbaca | Pastikan `ENABLE_COLAB_SECRETS = True`. Jika tetap gagal, pakai environment variable atau prompt interaktif |
 | Koneksi Putus / Sesi Timeout | Notebook punya `BackupAndRestore` callback yang auto-save state. Jalankan ulang cell training dengan `initial_epoch=CHECKPOINT_EPOCH`. |
-| Training Terlalu Lambat | Ubah `VIT_VARIANT = "base"` (lebih cepat). Kurangi `HEAD_EPOCHS` atau `FINE_TUNE_EPOCHS`. Kurangi `BATCH_SIZE` ke 16 jika OOM. |
+| Training Terlalu Lambat | Ubah `VIT_VARIANT = "base"` (lebih cepat). Kurangi `HEAD_EPOCHS` atau `FINE_TUNE_EPOCHS`. |
+| OOM / VRAM tidak cukup | Notebook sudah memakai `BATCH_SIZE = 16` dan fallback otomatis ke `8` saat `ResourceExhaustedError` |
 
 ---
 
@@ -183,10 +188,11 @@ Sebelum eksekusi training, pastikan:
 - [ ] Runtime sudah GPU (lihat indikator di atas kanan Colab).
 - [ ] Colab Secret `KAGGLE_API_TOKEN` sudah ada & aktif.
 - [ ] Colab Secret `HF_TOKEN` sudah ada & aktif.
-- [ ] Cell 3-5 berjalan tanpa error (hardware terdeteksi).
-- [ ] Cell 15 berjalan tanpa error (dataset terdownload).
-- [ ] Cell 43-44 berhasil login ke Kaggle & Hugging Face.
-- [ ] Cell 45 sudah tentukan `VIT_VARIANT` ("base" atau "large").
+- [ ] `ENABLE_COLAB_SECRETS = True` jika ingin token dibaca dari Colab Secrets.
+- [ ] Bagian hardware setup berjalan tanpa error (GPU terdeteksi).
+- [ ] Bagian dataset download berjalan tanpa error.
+- [ ] Bagian Hugging Face login dan ViT setup berjalan tanpa error.
+- [ ] `VIT_VARIANT` sudah ditentukan (`"base"` atau `"large"`).
 
 ---
 
