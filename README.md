@@ -1,195 +1,215 @@
-# Deep Learning Forum 06: Garbage Classification dengan Vision Transformer (ViT)
+# Deep Learning Forum 06: Indonesian Food Classification
 
 **Student Name:** Yanlis Alim Sang Putra Lase  
 **Student ID:** 2702751284  
 **Program:** Master's in Informatics, BINUS Graduate Program
 
-Repository ini berisi implementasi pipeline end-to-end untuk **klasifikasi sampah berbasis citra** menggunakan transfer learning dari model Vision Transformer (ViT) Google yang tersedia di Hugging Face.
+This repository contains the implementation and documentation for Forum 04, a deep learning assignment focused on multiclass Indonesian food image classification using Convolutional Neural Networks (CNN).
 
 ## 1. Project Overview
 
-Forum 06 mengimplementasikan pipeline end-to-end untuk **klasifikasi sampah** dengan focus pada:
-1. **Akuisisi dataset** dari Kaggle (Garbage Classification Dataset).
-2. **Labeling otomatis** berbasis struktur folder.
-3. **EDA ringkas** untuk memahami distribusi kelas dan ukuran citra.
-4. **Preprocessing** ke format ViT (224×224).
-5. **Fine-tuning 2-tahap**: freeze backbone → unfreeze dengan learning rate lebih kecil.
-6. **Checkpointing berkala** untuk mencegah kehilangan progres training.
+This project builds an end-to-end deep learning pipeline for multiclass food-image classification. The workflow starts from Kaggle dataset acquisition, continues through folder-based label extraction and image preprocessing, and ends with model training and evaluation on held-out validation and test splits.
 
-**Sumber**: [Kaggle Garbage Classification Dataset](https://www.kaggle.com/datasets/asdasdasasdas/garbage-classification)
+The main objective is comparative and methodological: to evaluate how a custom CNN architecture performs against a transfer learning approach based on VGG16 when both models are trained on the same Indonesian food dataset.
 
-**Kategori** (6 kelas awal, difilter ke 5 kelas):
-- `cardboard` (karton)
-- `glass` (kaca)
-- `metal` (logam)
-- `paper` (kertas)
-- `plastic` (plastik)
-- ~~`trash`~~ (dibuang karena jumlah sampel sedikit)
+The completed experiment in this repository shows that the VGG16-based model outperforms the custom CNN on both validation and test data.
 
-**Ukuran**: ~2.500 gambar, masing-masing 512×384 px, distandarisasi ke 224×224 untuk ViT.
+## 2. Data Source
 
-**Struktur**: Folder per kategori dengan subdivisi `train/val/test`.
+The image dataset is obtained from Kaggle:
 
-## 2. Data Source (continued)
+- **Kaggle dataset:** `rizkyyk/dataset-food-classification`
 
-## 3. Quick Start
+The dataset contains 13 Indonesian food categories organized into class folders and three splits: training, validation, and test. After local caching, the project uses 6,490 images stored under the repository `dataset/` folder.
 
-### ⚡ Recommended: Google Colab GPU
+| No. | Food Category | Description |
+|---|---|---|
+| 1 | Ayam Goreng | Fried chicken dishes |
+| 2 | Burger | Burger-style fast food |
+| 3 | French Fries | Fried potato side dish |
+| 4 | Gado-Gado | Indonesian vegetable salad with peanut sauce |
+| 5 | Ikan Goreng | Fried fish dishes |
+| 6 | Mie Goreng | Fried noodle dishes |
+| 7 | Nasi Goreng | Indonesian fried rice |
+| 8 | Nasi Padang | Padang-style rice meals |
+| 9 | Pizza | Pizza dishes |
+| 10 | Rawon | East Javanese beef soup |
+| 11 | Rendang | Slow-cooked spiced beef |
+| 12 | Sate | Skewered grilled meat |
+| 13 | Soto Ayam | Indonesian chicken soup |
 
-**Estimated time**: 30–60 menit untuk vit-base (~100-200 menit untuk vit-large).
+## 3. Function and Purpose
 
-1. **Push perubahan ke GitHub** (sudah selesai ✅):
-   ```powershell
-   git add .
-   git commit -m "Forum06 setup + Colab integration"
-   git push origin main
-   ```
+The notebook is designed to perform the following core functions:
 
-2. **Buka di Colab**:
-   - Pergi ke [https://colab.research.google.com/](https://colab.research.google.com/)
-   - File → Open notebook → GitHub
-   - Paste URL repo → pilih notebook
+1. Download and cache the Indonesian food dataset locally using KaggleHub.
+2. Convert folder names into model-friendly labels.
+3. Associate each image path with the correct class label.
+4. Perform image-based exploratory data analysis covering class balance, split composition, image geometry, and qualitative sample inspection.
+5. Standardize image sizes to `(224, 224, 3)` for CNN processing.
+6. Train and evaluate two model families:
 
-3. **Setup Colab** (ikuti [COLAB_SETUP.md](COLAB_SETUP.md)):
-   - Runtime → Change runtime type → GPU (T4 atau L4)
-   - Tambah Colab Secrets: `KAGGLE_API_TOKEN`, `HF_TOKEN`
+- **Model 01:** Custom CNN architecture
+- **Model 02:** VGG16-based transfer learning model
 
-4. **Run Training**:
-   - Cell → Run all
-   - Tunggu training selesai
-   - Checkpoint otomatis disimpan ke Google Drive
+7. Compare model performance using `loss`, `accuracy`, and `top_3_accuracy`.
 
-5. **Pull hasil** (opsional):
-   ```powershell
-   git pull origin main
-   ```
+## 4. Expected Output
 
-## 4. Architecture & Configuration
+The expected deliverables of this project are:
 
-| Komponen | Detail |
-|----------|--------|
-| **Backbone** | Google ViT Base / Large (dari Hugging Face) |
-| **Input** | 224×224×3 RGB (normalized ke ViT mean/std) |
-| **Training Strategy** | 2-stage: freeze backbone (5 epoch) → fine-tune (10 epoch) |
-| **Loss** | SparseCategoricalCrossentropy |
-| **Optimizer** | AdamW (LR 1e-4 → 1e-5, weight_decay 1e-4) |
-| **Class Weighting** | Balanced (untuk handle imbalance) |
-| **Augmentation** | RandomFlip, RandomRotation (0.05), RandomZoom (0.1) |
-| **Callbacks** | EarlyStopping, ReduceLROnPlateau, ModelCheckpoint, BackupAndRestore, CSVLogger |
+1. **A completed training notebook** for the Indonesian food classification task.
+2. **An exploratory data analysis notebook** for the image dataset.
+3. **An HTML EDA report** derived from the exploratory analysis.
+4. **Saved Keras model files** for the best CNN and VGG16 variants.
+5. **Training-history plots** showing loss, accuracy, and top-3 accuracy.
+6. **A final model comparison table** summarizing validation and test metrics.
 
-### Pilih Model ViT (Cell 43)
+### Quick Access: EDA Report (HTML)
 
-```python
-VIT_VARIANT = "base"  # atau "large"
+Click here to open the published EDA report directly:
+
+- **EDA Report:** [https://yanlis-lase-ssg7.github.io/2521-deepLearning-forum06/EDA_Report_Garbage.html](https://yanlis-lase-ssg7.github.io/2521-deepLearning-forum06/EDA_Report_Garbage.html)
+
+## 5. Step-by-Step Installation and Usage
+
+Run the following commands in PowerShell from your preferred working directory.
+
+### 5.1 Git Clone
+
+```powershell
+git clone https://github.com/yanlis-lase-SSG7/2521-deepLearning-forum06.git
+cd 2521-deepLearning-forum06
 ```
 
-- **"base"**: Lebih cepat (~30-45 min), cocok untuk eksperimen
-- **"large"**: Lebih akurat, training lebih lama (~2-3 jam)
+### 5.2 Create Virtual Environment
 
-## 5. Checkpoint & Safety
-
-Notebook sudah disiapkan dengan checkpoint callbacks multi-layer:
-
-| File | Keterangan |
-|------|-----------|
-| `best_vit_model.keras` | Model terbaik (berdasarkan val_loss terendah) |
-| `vit_epoch_XX.weights.h5` | Weight per epoch (max 15 files sesuai total epoch) |
-| `training_log.csv` | Log loss, accuracy per epoch |
-| `backup/` | Auto-restore jika sesi terputus |
-
-**Lokasi**: `/content/drive/MyDrive/forum06_checkpoints/vit/` (di Google Drive)
-
----
-
-## 6. Dokumentasi & Setup
-
-**📖 Panduan lengkap Colab setup** → [**COLAB_SETUP.md**](COLAB_SETUP.md)
-
-## 7. Security: Token Management
-
-**JANGAN hardcode token Kaggle atau Hugging Face di notebook.**
-
-Notebook sudah disiapkan untuk membaca token dengan urutan prioritas:
-
-### Kaggle Token
-1. Colab Secret `KAGGLE_API_TOKEN`
-2. Environment Variable `KAGGLE_API_TOKEN`
-3. File `~/.kaggle/access_token`
-4. File `~/.kaggle/kaggle.json`
-
-### Hugging Face Token
-1. Colab Secret `HF_TOKEN`
-2. Environment Variable `HF_TOKEN`
-3. File `cred/hf_token.json` (lokal)
-
-Setup di Colab: Lihat [COLAB_SETUP.md](COLAB_SETUP.md) → Step 3.
-
-## 8. Repository Structure
-
+```powershell
+python -m venv venv
 ```
-2521-deepLearning-forum06/
-├── Forum06-garbage_classification_question.ipynb    # Main notebook
-├── Forum06-requirements.txt                         # Dependencies
-├── COLAB_SETUP.md                                  # 📖 Panduan Colab ✨
-├── README.md                                       # File ini
-├── .git/
-├── .gitignore
+
+### 5.3 Activate Virtual Environment (Windows)
+
+```powershell
+.\venv\Scripts\activate
+```
+
+### 5.4 Set Kaggle Token
+
+```powershell
+$env:KAGGLE_API_TOKEN="YOUR_KAGGLE_API_TOKEN"
+```
+
+Alternative authentication methods supported by the notebooks:
+
+- `~/.kaggle/kaggle.json`
+- `~/.kaggle/access_token`
+- Google Colab secret `KAGGLE_API_TOKEN`
+- Interactive `kagglehub.login()` prompt
+
+### 5.5 Install Dependencies
+
+```powershell
+pip install -r Forum06-requirements.txt
+```
+
+### 5.6 Run the Main Notebook
+
+Open and execute:
+
+- `Forum04-indonesian_food_question.ipynb`
+
+For reproducible results, run notebook cells sequentially from top to bottom.
+
+### 5.7 Run the EDA Notebook
+
+Open and execute:
+
+- `EDA_Report_Indonesian_Food.ipynb`
+
+After the notebook is executed, export it to HTML if you want a refreshed static report that matches the latest notebook output.
+
+## 6. Technical Requirements
+
+The technical stack for this project includes:
+
+- Python 3.10+
+- TensorFlow 2.x
+- NumPy
+- Pandas
+- Matplotlib
+- Seaborn
+- Pillow
+- KaggleHub
+- Jupyter Notebook / VS Code Notebook support
+
+> Note (Windows): TensorFlow in this project is configured to run on CPU mode for native Windows compatibility.
+
+## 7. Architecture Details
+
+The following table summarizes the two image-classification models used in this assignment:
+
+| Component | Model 01 | Model 02 |
+|---|---|---|
+| Backbone | Custom CNN | Pretrained VGG16 |
+| Input shape | `224 x 224 x 3` | `224 x 224 x 3` |
+| Feature extraction | Learned from scratch | Transfer learning from ImageNet |
+| Head | Dense MLP classifier | Dense MLP classifier |
+| Main purpose | Baseline architecture | Higher-capacity benchmark |
+
+## 8. Workflow (How it Works)
+
+The full pipeline is implemented as a structured sequence:
+
+1. **Authentication and Dataset Retrieval**  
+	Check local `dataset/` cache first and download from Kaggle only when images are missing.
+
+2. **Folder-Based Label Extraction**  
+	Read subfolder names from the training split and convert them into machine-friendly labels.
+
+3. **Image Path Labeling**  
+	Associate each image path from train, validation, and test folders with the correct category label.
+
+4. **Exploratory Data Analysis**  
+	Inspect label-count distribution, split composition, and image-size variation to understand class balance and preprocessing needs.
+
+5. **Image Standardization**  
+	Resize the shortest side to 224 pixels and apply center crop to produce a consistent `(224, 224, 3)` tensor.
+
+6. **TensorFlow Dataset Construction**  
+	Convert image paths and labels into efficient `tf.data.Dataset` pipelines for model training.
+
+7. **Training**  
+	Train both the custom CNN and the VGG16-based model with early stopping, learning-rate reduction, and checkpointing.
+
+8. **Evaluation and Comparison**  
+	Compare train, validation, and test performance using loss, top-1 accuracy, and top-3 accuracy.
+
+## 9. Final Results Snapshot
+
+The main notebook currently reports the following final comparison:
+
+| Model | Validation Accuracy | Test Accuracy | Validation Top-3 Accuracy | Test Top-3 Accuracy |
+|---|---:|---:|---:|---:|
+| Custom CNN | 0.792 | 0.776 | 0.940 | 0.918 |
+| VGG16 Transfer Learning | 0.885 | 0.895 | 0.971 | 0.977 |
+
+These results indicate that the VGG16-based transfer learning model is the strongest model in the current experiment.
+
+## Repository Structure
+
+```text
+2521-deepLearning-forum04/
 ├── dataset/
-│   └── Garbage classification/
-│       └── Garbage classification/
-│           ├── cardboard/
-│           ├── glass/
-│           ├── metal/
-│           ├── paper/
-│           ├── plastic/
-│           └── trash/
-├── checkpoints/          # Local checkpoint (jika run lokal)
-│   └── vit/
-└── cred/                 # Kosong (tempat hf_token.json lokal)
-    └── hf_token.json     # (jika ada, fallback saat tidak ada secret)
+│   ├── train/
+│   ├── valid/
+│   └── test/
+├── keras_model/
+│   ├── indonesian_food_model.keras
+│   └── vgg_indonesian_food_model.keras
+├── EDA_Report_Indonesian_Food.html
+├── EDA_Report_Indonesian_Food.ipynb
+├── Forum04-indonesian_food_question.ipynb
+├── Forum04-requirements.txt
+└── README.md
 ```
-
----
-
-## 9. Troubleshooting Checklist
-
-| Masalah | Solusi |
-|---------|--------|
-| GPU tidak terdeteksi di Colab | Runtime → Change runtime type → GPU |
-| Token Kaggle error | Pastikan Colab Secret `KAGGLE_API_TOKEN` sudah ON |
-| Token HF error | Pastikan Colab Secret `HF_TOKEN` sudah ON |
-| Dataset tidak terdownload | Pastikan Kaggle token benar, internet stabil |
-| Training timeout/disconnect | BackupAndRestore callback sudah aktif, ulang dari epoch terakhir |
-| Out of Memory (OOM) | Kurangi BATCH_SIZE atau gunakan vit-base |
-
----
-
-## 10. Pre-Training Checklist
-
-Sebelum eksekusi training, pastikan:
-
-- [ ] Notebook sudah di-push ke GitHub
-- [ ] Buka di Colab dan ganti ke runtime GPU
-- [ ] Colab Secret `KAGGLE_API_TOKEN` sudah ditambah & aktif
-- [ ] Colab Secret `HF_TOKEN` sudah ditambah & aktif
-- [ ] Cell 5 berhasil mendeteksi GPU
-- [ ] Cell 15 berhasil download dataset dari Kaggle
-- [ ] Cell 43 sudah tentukan `VIT_VARIANT` ("base" atau "large")
-- [ ] Siap click "Run all"
-
----
-
-## 11. Referensi
-
-- [Hugging Face Vision Transformer (ViT) - Base](https://huggingface.co/google/vit-base-patch16-224)
-- [Hugging Face Vision Transformer (ViT) - Large](https://huggingface.co/google/vit-large-patch16-224)
-- [Vision Transformer (ViT) Paper](https://arxiv.org/abs/2010.11929)
-- [Kaggle Garbage Classification Dataset](https://www.kaggle.com/datasets/asdasdasasdas/garbage-classification)
-- [TensorFlow Keras Callbacks](https://www.tensorflow.org/api_docs/python/tf/keras/callbacks)
-- [Transformers LibraryDocumentation](https://huggingface.co/docs/transformers/)
-
----
-
-**Last Updated**: April 14, 2026  
-**Status**: Ready for Colab GPU training ✅  
-**Panduan Colab Lengkap**: [COLAB_SETUP.md](COLAB_SETUP.md) ✨
