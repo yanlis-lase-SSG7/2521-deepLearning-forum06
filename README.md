@@ -1,78 +1,61 @@
-# Deep Learning Forum 06: Indonesian Food Classification
+# Deep Learning Forum 06: Garbage Classification with ViT-Large
 
 **Student Name:** Yanlis Alim Sang Putra Lase  
 **Student ID:** 2702751284  
 **Program:** Master's in Informatics, BINUS Graduate Program
-
-This repository contains the implementation and documentation for Forum 04, a deep learning assignment focused on multiclass Indonesian food image classification using Convolutional Neural Networks (CNN).
+This repository contains the implementation and documentation for Forum 06, a deep learning assignment focused on multiclass garbage image classification using transfer learning with Vision Transformer Large (ViT-L/16).
 
 ## 1. Project Overview
+This project builds an end-to-end image-classification pipeline for the Kaggle Garbage Classification dataset. The workflow covers dataset access, exploratory data analysis, class filtering, preprocessing, TensorFlow dataset construction, transfer learning, evaluation, and error analysis.
 
-This project builds an end-to-end deep learning pipeline for multiclass food-image classification. The workflow starts from Kaggle dataset acquisition, continues through folder-based label extraction and image preprocessing, and ends with model training and evaluation on held-out validation and test splits.
-
-The main objective is comparative and methodological: to evaluate how a custom CNN architecture performs against a transfer learning approach based on VGG16 when both models are trained on the same Indonesian food dataset.
-
-The completed experiment in this repository shows that the VGG16-based model outperforms the custom CNN on both validation and test data.
+The main model in the notebook is the Hugging Face Vision Transformer checkpoint `google/vit-large-patch16-224`. The notebook does not position this task as a CNN-vs-CNN comparison. Instead, it focuses on how a large pre-trained ViT can be adapted to a relatively small material-recognition dataset and how its residual error patterns should be interpreted quantitatively.
+The final executed notebook shows that the model reaches solid overall performance, but its dominant residual confusion is between `plastic` and `glass`, not `cardboard` and `paper` alone.
 
 ## 2. Data Source
-
 The image dataset is obtained from Kaggle:
 
-- **Kaggle dataset:** `rizkyyk/dataset-food-classification`
+- **Kaggle dataset:** `asdasdasasdas/garbage-classification`
 
-The dataset contains 13 Indonesian food categories organized into class folders and three splits: training, validation, and test. After local caching, the project uses 6,490 images stored under the repository `dataset/` folder.
+The raw dataset contains **2,527 images** across **6 categories**:
+| No. | Category | Image Count |
+|---|---|---:|
+| 1 | cardboard | 403 |
+| 2 | glass | 501 |
+| 3 | metal | 410 |
+| 4 | paper | 594 |
+| 5 | plastic | 482 |
+| 6 | trash | 137 |
 
-| No. | Food Category | Description |
-|---|---|---|
-| 1 | Ayam Goreng | Fried chicken dishes |
-| 2 | Burger | Burger-style fast food |
-| 3 | French Fries | Fried potato side dish |
-| 4 | Gado-Gado | Indonesian vegetable salad with peanut sauce |
-| 5 | Ikan Goreng | Fried fish dishes |
-| 6 | Mie Goreng | Fried noodle dishes |
-| 7 | Nasi Goreng | Indonesian fried rice |
-| 8 | Nasi Padang | Padang-style rice meals |
-| 9 | Pizza | Pizza dishes |
-| 10 | Rawon | East Javanese beef soup |
-| 11 | Rendang | Slow-cooked spiced beef |
-| 12 | Sate | Skewered grilled meat |
-| 13 | Soto Ayam | Indonesian chicken soup |
-
+Because `trash` is severely underrepresented, the main notebook excludes it from modelling. The effective modelling subset therefore contains:
+- **2,390 images**
+- **5 categories**: `cardboard`, `glass`, `metal`, `paper`, `plastic`
+- **Uniform source resolution**: `512 x 384`
 ## 3. Function and Purpose
 
-The notebook is designed to perform the following core functions:
+The main notebook is designed to perform the following tasks:
 
-1. Download and cache the Indonesian food dataset locally using KaggleHub.
-2. Convert folder names into model-friendly labels.
-3. Associate each image path with the correct class label.
-4. Perform image-based exploratory data analysis covering class balance, split composition, image geometry, and qualitative sample inspection.
-5. Standardize image sizes to `(224, 224, 3)` for CNN processing.
-6. Train and evaluate two model families:
-
-- **Model 01:** Custom CNN architecture
-- **Model 02:** VGG16-based transfer learning model
-
-7. Compare model performance using `loss`, `accuracy`, and `top_3_accuracy`.
+1. Download or resolve the garbage-classification dataset from local cache or Kaggle.
+2. Inspect class balance and justify the exclusion of the `trash` category.
+3. Build labeled path lists for training, validation, and testing.
+4. Perform image-based exploratory data analysis on class counts, image geometry, file-size patterns, and channel statistics.
+5. Standardize images for ViT input using resize, center crop, normalization, and tensor layout conversion.
+6. Fine-tune `google/vit-large-patch16-224` in a two-stage training pipeline.
+7. Evaluate the final model on the full test split.
+8. Extend evaluation with a confusion matrix and classification report so the error narrative is supported by full-test quantitative evidence.
 
 ## 4. Expected Output
+The main deliverables of this repository are:
 
-The expected deliverables of this project are:
-
-1. **A completed training notebook** for the Indonesian food classification task.
-2. **An exploratory data analysis notebook** for the image dataset.
-3. **An HTML EDA report** derived from the exploratory analysis.
-4. **Saved Keras model files** for the best CNN and VGG16 variants.
-5. **Training-history plots** showing loss, accuracy, and top-3 accuracy.
-6. **A final model comparison table** summarizing validation and test metrics.
-
+1. **A completed main notebook** for garbage classification with ViT-Large.
+2. **A standalone EDA notebook** summarising the exploratory analysis.
+3. **A generated HTML EDA report** aligned with the main notebook conclusions.
+4. **Training and evaluation outputs** produced from the notebook run.
+5. **A final discussion section** covering challenges, solutions, conclusions, and recommendations.
 ### Quick Access: EDA Report (HTML)
-
-Click here to open the published EDA report directly:
 
 - **EDA Report:** [https://yanlis-lase-ssg7.github.io/2521-deepLearning-forum06/EDA_Report_Garbage.html](https://yanlis-lase-ssg7.github.io/2521-deepLearning-forum06/EDA_Report_Garbage.html)
 
 ## 5. Step-by-Step Installation and Usage
-
 Run the following commands in PowerShell from your preferred working directory.
 
 ### 5.1 Git Clone
@@ -94,122 +77,157 @@ python -m venv venv
 .\venv\Scripts\activate
 ```
 
-### 5.4 Set Kaggle Token
-
-```powershell
-$env:KAGGLE_API_TOKEN="YOUR_KAGGLE_API_TOKEN"
-```
-
-Alternative authentication methods supported by the notebooks:
-
-- `~/.kaggle/kaggle.json`
-- `~/.kaggle/access_token`
-- Google Colab secret `KAGGLE_API_TOKEN`
-- Interactive `kagglehub.login()` prompt
-
-### 5.5 Install Dependencies
+### 5.4 Install Dependencies
 
 ```powershell
 pip install -r Forum06-requirements.txt
 ```
 
+### 5.5 Provide Access Tokens
+
+The main notebook may require:
+
+- **Kaggle token** for dataset access
+- **Hugging Face token** for downloading `google/vit-large-patch16-224`
+
+Common approaches supported by the notebook and Colab workflow:
+
+- environment variables
+- local credential files
+- Colab Secrets
+- interactive fallback prompt
+
+For the Colab-based workflow used for training, see [d:\Project S2\2521\2521-deepLearning-forum06\COLAB_SETUP.md](d:/Project%20S2/2521/2521-deepLearning-forum06/COLAB_SETUP.md).
+
 ### 5.6 Run the Main Notebook
 
 Open and execute:
 
-- `Forum04-indonesian_food_question.ipynb`
+- `Forum06-garbage_classification_question.ipynb`
 
-For reproducible results, run notebook cells sequentially from top to bottom.
+For reproducible results, run the notebook sequentially from top to bottom.
 
 ### 5.7 Run the EDA Notebook
 
 Open and execute:
 
-- `EDA_Report_Indonesian_Food.ipynb`
+- `EDA_Report_Garbage.ipynb`
 
-After the notebook is executed, export it to HTML if you want a refreshed static report that matches the latest notebook output.
+### 5.8 Refresh the Static HTML EDA Report
+
+To regenerate the HTML report from the Python generator:
+
+```powershell
+python generate_eda_report.py
+```
 
 ## 6. Technical Requirements
 
-The technical stack for this project includes:
+The technical stack used in this project includes:
 
 - Python 3.10+
-- TensorFlow 2.x
+- TensorFlow 2.16.x
+- Transformers
+- tf-keras
 - NumPy
 - Pandas
 - Matplotlib
 - Seaborn
 - Pillow
+- scikit-learn
 - KaggleHub
 - Jupyter Notebook / VS Code Notebook support
 
-> Note (Windows): TensorFlow in this project is configured to run on CPU mode for native Windows compatibility.
+> Note: local Windows execution is suitable for setup, EDA, and notebook editing, but full ViT-Large training is intended for a GPU runtime such as Google Colab T4.
 
-## 7. Architecture Details
+## 7. Model and Pipeline Summary
 
-The following table summarizes the two image-classification models used in this assignment:
+The notebook implements the following modelling setup:
 
-| Component | Model 01 | Model 02 |
-|---|---|---|
-| Backbone | Custom CNN | Pretrained VGG16 |
-| Input shape | `224 x 224 x 3` | `224 x 224 x 3` |
-| Feature extraction | Learned from scratch | Transfer learning from ImageNet |
-| Head | Dense MLP classifier | Dense MLP classifier |
-| Main purpose | Baseline architecture | Higher-capacity benchmark |
+| Component | Configuration |
+|---|---|
+| Backbone | `google/vit-large-patch16-224` |
+| Model family | Vision Transformer Large (ViT-L/16) |
+| Input size | `224 x 224 x 3` |
+| Source resolution | `512 x 384` |
+| Modelling classes | `cardboard`, `glass`, `metal`, `paper`, `plastic` |
+| Excluded class | `trash` |
+| Split strategy | Stratified `70 / 15 / 15` |
+| Final split sizes | `1,673 train`, `358 validation`, `359 test` |
+| Training stages | head warm-up + full fine-tuning |
 
 ## 8. Workflow (How it Works)
 
-The full pipeline is implemented as a structured sequence:
+The full pipeline in the notebook follows this sequence:
 
-1. **Authentication and Dataset Retrieval**  
-	Check local `dataset/` cache first and download from Kaggle only when images are missing.
+1. **Environment and authentication setup**  
+	Resolve package requirements and fetch Kaggle / Hugging Face credentials through a fallback chain.
 
-2. **Folder-Based Label Extraction**  
-	Read subfolder names from the training split and convert them into machine-friendly labels.
+2. **Dataset resolution**  
+	Load the garbage dataset from local cache or Kaggle and inspect available files.
 
-3. **Image Path Labeling**  
-	Associate each image path from train, validation, and test folders with the correct category label.
+3. **Class inspection and filtering**  
+	Confirm that `trash` is severely underrepresented, then remove it from all modelling steps.
 
-4. **Exploratory Data Analysis**  
-	Inspect label-count distribution, split composition, and image-size variation to understand class balance and preprocessing needs.
+4. **Exploratory data analysis**  
+	Inspect class counts, image dimensions, file-size distribution, and sampled channel statistics.
 
-5. **Image Standardization**  
-	Resize the shortest side to 224 pixels and apply center crop to produce a consistent `(224, 224, 3)` tensor.
+5. **Preprocessing for ViT**  
+	Resize the shortest side, apply center crop, normalize with ImageNet statistics, and convert tensors to the format expected by the Hugging Face ViT backbone.
 
-6. **TensorFlow Dataset Construction**  
-	Convert image paths and labels into efficient `tf.data.Dataset` pipelines for model training.
+6. **Dataset construction**  
+	Build `tf.data.Dataset` pipelines for train, validation, and test splits.
 
-7. **Training**  
-	Train both the custom CNN and the VGG16-based model with early stopping, learning-rate reduction, and checkpointing.
+7. **Two-stage fine-tuning**  
+	Train the classifier head first, then unfreeze the backbone for full fine-tuning with conservative learning rates.
 
-8. **Evaluation and Comparison**  
-	Compare train, validation, and test performance using loss, top-1 accuracy, and top-3 accuracy.
+8. **Evaluation and quantitative error analysis**  
+	Report loss and accuracy, then compute a confusion matrix and classification report over the entire test split.
 
 ## 9. Final Results Snapshot
 
-The main notebook currently reports the following final comparison:
+The executed main notebook currently reports the following final results for the fine-tuned ViT-Large model:
 
-| Model | Validation Accuracy | Test Accuracy | Validation Top-3 Accuracy | Test Top-3 Accuracy |
-|---|---:|---:|---:|---:|
-| Custom CNN | 0.792 | 0.776 | 0.940 | 0.918 |
-| VGG16 Transfer Learning | 0.885 | 0.895 | 0.971 | 0.977 |
+| Metric | Value |
+|---|---:|
+| Test Accuracy | 0.8635 |
+| Test Loss | 0.4224 |
+| Macro F1 | 0.8635 |
+| Weighted F1 | 0.8632 |
+| Best Validation Accuracy | 0.8827 |
+| Best Validation Loss | 0.3610 |
 
-These results indicate that the VGG16-based transfer learning model is the strongest model in the current experiment.
+These results indicate that the model performs reasonably well across the five retained classes, with balanced aggregate performance rather than a narrow win on only one class.
+
+## 10. Error Pattern Summary
+
+The final notebook and synced EDA materials now align on the following interpretation:
+
+1. `plastic` is the weakest class overall.
+2. The dominant residual confusion is `plastic -> glass` and `glass -> plastic`.
+3. `paper -> cardboard` and `cardboard -> paper` still occur, but at a lower rate.
+4. The EDA report should therefore treat `cardboard` vs `paper` as an exploratory hypothesis, while the main notebook remains the source of truth for full-test quantitative error patterns.
+
+Key quantitative confusion details from the main notebook:
+
+- `plastic -> glass`: 12 cases, 16.44% of plastic samples
+- `glass -> plastic`: 8 cases, 10.67% of glass samples
+- `paper -> cardboard`: 4 cases
+- `cardboard -> paper`: 3 cases
+- `plastic` recall: 0.7671
+- `plastic` F1-score: 0.7832
 
 ## Repository Structure
 
 ```text
-2521-deepLearning-forum04/
+2521-deepLearning-forum06/
 ├── dataset/
-│   ├── train/
-│   ├── valid/
-│   └── test/
-├── keras_model/
-│   ├── indonesian_food_model.keras
-│   └── vgg_indonesian_food_model.keras
-├── EDA_Report_Indonesian_Food.html
-├── EDA_Report_Indonesian_Food.ipynb
-├── Forum04-indonesian_food_question.ipynb
-├── Forum04-requirements.txt
+├── COLAB_SETUP.md
+├── EDA_Report_Garbage.html
+├── EDA_Report_Garbage.ipynb
+├── Forum06-garbage_classification_question.ipynb
+├── Forum06-requirements.txt
+├── generate_eda_report.py
+├── note.txt
 └── README.md
 ```
