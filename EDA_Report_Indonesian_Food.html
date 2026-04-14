@@ -1,0 +1,233 @@
+﻿<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EDA Report — Indonesian Food Dataset</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+  <style>
+    :root {
+      --bg:       #f7f4ed;
+      --panel:    #fffdfa;
+      --ink:      #1f2933;
+      --muted:    #52606d;
+      --accent:   #a63d40;
+      --accent-2: #f18f01;
+      --accent-3: #2e86ab;
+      --accent-4: #54a24b;
+      --line:     #e6dfd1;
+    }
+    *, *::before, *::after { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Georgia, "Times New Roman", serif;
+      background: linear-gradient(180deg, #faf7f0 0%, #f3eee3 100%);
+      color: var(--ink);
+      line-height: 1.65;
+    }
+    main { max-width: 1020px; margin: 0 auto; padding: 48px 20px 80px; }
+    header {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      padding: 30px 32px;
+      box-shadow: 0 12px 30px rgba(42,53,71,.08);
+      margin-bottom: 22px;
+    }
+    header h1 { margin: 0 0 10px; font-size: 2rem; color: var(--accent); line-height: 1.2; }
+    header p  { margin: 0; color: var(--muted); font-size: .97rem; }
+    section {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      padding: 26px 30px;
+      margin-top: 20px;
+      box-shadow: 0 8px 22px rgba(42,53,71,.05);
+    }
+    h2 { margin: 0 0 18px; font-size: 1.25rem; color: #7c2d12; border-bottom: 2px solid var(--line); padding-bottom: 8px; }
+    h3 { margin: 22px 0 10px; font-size: 1rem; color: var(--ink); }
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 14px; margin-top: 4px;
+    }
+    .card { border: 1px solid var(--line); padding: 18px 16px; background: #fffaf1; text-align: center; }
+    .card .val { font-size: 2rem; font-weight: bold; color: var(--accent); display: block; line-height: 1.1; }
+    .card .lbl { font-size: .82rem; color: var(--muted); margin-top: 5px; display: block; }
+    .chart-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 18px; }
+    .chart-grid.full { grid-template-columns: 1fr; }
+    @media (max-width: 680px) { .chart-grid { grid-template-columns: 1fr; } }
+    .chart-box { border: 1px solid var(--line); padding: 16px; background: #fffdf8; }
+    .chart-box p.cap { font-size: .81rem; color: var(--muted); margin: 10px 0 0; text-align: center; }
+    .tbl-wrap { overflow-x: auto; margin-top: 16px; }
+    table { border-collapse: collapse; width: 100%; font-size: .88rem; }
+    thead tr { background: #f2ece2; }
+    th, td { padding: 8px 14px; border: 1px solid var(--line); text-align: right; }
+    th:first-child, td:first-child { text-align: left; }
+    tbody tr:nth-child(even) { background: #fdf8f0; }
+    td.total { font-weight: bold; }
+    .balance-bar-wrap { margin-top: 16px; }
+    .balance-row { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; font-size: .83rem; }
+    .balance-label { width: 130px; flex-shrink: 0; color: var(--ink); }
+    .bar-bg { flex: 1; background: #ede7d9; height: 16px; border-radius: 3px; overflow: hidden; }
+    .bar-fill { height: 100%; border-radius: 3px; }
+    .balance-count { width: 38px; text-align: right; color: var(--muted); }
+    .note {
+      border-left: 4px solid var(--accent-2);
+      padding: 10px 14px; color: var(--muted); font-size: .88rem;
+      margin-top: 16px; background: #fffdf6;
+    }
+    .split-row { display: flex; gap: 14px; margin-top: 16px; flex-wrap: wrap; }
+    .split-pill {
+      flex: 1; min-width: 140px;
+      border: 1px solid var(--line); padding: 14px 18px; background: #fffaf1;
+      display: flex; flex-direction: column; align-items: center;
+    }
+    .split-pill .s-count { font-size: 1.7rem; font-weight: bold; }
+    .split-pill .s-name  { font-size: .8rem; color: var(--muted); margin-top: 2px; }
+    .split-pill .s-pct   { font-size: .75rem; color: var(--muted); margin-top: 4px; }
+    .pill-train  .s-count { color: #2e86ab; }
+    .pill-valid  .s-count { color: #f18f01; }
+    .pill-test   .s-count { color: #a63d40; }
+    code { background: #f2ece2; padding: 2px 6px; border-radius: 4px; font-size: .88em; }
+    ul { padding-left: 20px; }
+    li { margin-bottom: 5px; }
+  </style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>EDA Report: Indonesian Food Image Dataset</h1>
+    <p>Laporan ini menyajikan ringkasan analisis eksploratif data (EDA) untuk dataset klasifikasi makanan Indonesia yang digunakan pada Forum 04. Visualisasi mencakup distribusi split, keseimbangan kelas, komposisi per kategori, serta temuan yang menjadi dasar keputusan preprocessing dalam notebook utama.</p>
+  </header>
+
+  <section>
+    <h2>1. Ikhtisar Dataset</h2>
+    <p>Dataset bersumber dari Kaggle (<code>rizkyyk/dataset-food-classification</code>) dan mencakup 13 kategori makanan. Gambar terbagi ke dalam tiga split: <em>train</em>, <em>valid</em>, dan <em>test</em>, dengan format file <code>.jpg</code>, <code>.jpeg</code>, dan <code>.png</code>.</p>
+    <div class="cards">
+      <div class="card"><span class="val">6.490</span><span class="lbl">Total Gambar</span></div>
+      <div class="card"><span class="val">13</span><span class="lbl">Kategori Makanan</span></div>
+      <div class="card"><span class="val">3</span><span class="lbl">Split (train / valid / test)</span></div>
+      <div class="card"><span class="val">224²</span><span class="lbl">Ukuran Input Model (px)</span></div>
+      <div class="card"><span class="val">~99.8%</span><span class="lbl">Keseimbangan Kelas (train)</span></div>
+    </div>
+    <div class="split-row">
+      <div class="split-pill pill-train">
+        <span class="s-count">5.193</span>
+        <span class="s-name">Train</span>
+        <span class="s-pct">80,0% dari total</span>
+      </div>
+      <div class="split-pill pill-valid">
+        <span class="s-count">650</span>
+        <span class="s-name">Validation</span>
+        <span class="s-pct">10,0% dari total</span>
+      </div>
+      <div class="split-pill pill-test">
+        <span class="s-count">647</span>
+        <span class="s-name">Test</span>
+        <span class="s-pct">10,0% dari total</span>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>2. Distribusi Split dan Kelas</h2>
+    <div class="chart-grid">
+      <div class="chart-box">
+        <canvas id="chartSplit" height="220"></canvas>
+        <p class="cap">Proporsi jumlah gambar per split</p>
+      </div>
+      <div class="chart-box">
+        <canvas id="chartClass" height="220"></canvas>
+        <p class="cap">Jumlah gambar per kelas pada split <em>train</em></p>
+      </div>
+    </div>
+    <div class="note">
+      Distribusi kelas pada split <em>train</em> sangat seimbang (rentang 398–400 gambar per kelas), artinya tidak diperlukan teknik resampling atau class-weighting untuk mengatasi class imbalance.
+    </div>
+  </section>
+
+  <section>
+    <h2>3. Rincian Jumlah Gambar per Kelas</h2>
+    <h3>Distribusi Train (jumlah gambar)</h3>
+    <div class="balance-bar-wrap" id="balanceBars"></div>
+    <h3>Tabel Lengkap per Split</h3>
+    <div class="tbl-wrap">
+      <table>
+        <thead>
+          <tr><th>Kategori</th><th>Train</th><th>Valid</th><th>Test</th><th>Total</th></tr>
+        </thead>
+        <tbody id="classTable"></tbody>
+        <tfoot>
+          <tr style="background:#f2ece2;font-weight:bold;">
+            <td>Jumlah</td>
+            <td class="total">5.193</td>
+            <td class="total">650</td>
+            <td class="total">647</td>
+            <td class="total">6.490</td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <h2>4. Variasi Geometri Gambar</h2>
+    <p>Gambar pada dataset ini memiliki ukuran yang tidak seragam. Hasil analisis menggunakan <code>PIL.Image</code> terhadap seluruh 6.490 gambar menunjukkan pola berikut:</p>
+    <ul>
+      <li><strong>Lebar (width):</strong> bervariasi luas, dengan sebaran yang tidak normal — sebagian besar gambar berada di kisaran resolusi medium hingga tinggi.</li>
+      <li><strong>Tinggi (height):</strong> distribusi serupa dengan lebar, menunjukkan mayoritas gambar bukan persegi sempurna.</li>
+      <li><strong>Rasio aspek:</strong> rentang rasio aspek yang lebar mengindikasikan adanya gambar portrait dan landscape secara bersamaan.</li>
+      <li><strong>Ukuran file:</strong> variasi ukuran file (KB) mencerminkan perbedaan kompresi dan resolusi sumber gambar.</li>
+    </ul>
+    <div class="chart-grid full" style="margin-top:18px;">
+      <div class="chart-box">
+        <canvas id="chartAspect" height="110"></canvas>
+        <p class="cap">Ilustrasi distribusi tipe rasio aspek gambar (landscape, portrait, square)</p>
+      </div>
+    </div>
+    <div class="note">
+      Karena mayoritas gambar tidak berukuran seragam dan rasio aspeknya bervariasi, pipeline preprocessing menggunakan strategi <strong>resize pada sisi terpendek → center crop ke 224 × 224</strong>. Pendekatan ini menjaga konten pusat gambar dan mengurangi distorsi geometri.
+    </div>
+  </section>
+
+  <section>
+    <h2>5. Temuan dan Implikasi Preprocessing</h2>
+    <ul>
+      <li><strong>Keseimbangan kelas sangat baik</strong> — distribusi 398–400 per kelas pada train menjadi dasar yang adil untuk membandingkan CNN kustom dan VGG16 tanpa bias distribusi label.</li>
+      <li><strong>Variasi ukuran gambar tinggi</strong> — standardisasi input menjadi kebutuhan mutlak; tanpa preprocessing, model tidak dapat menerima input tensor yang konsisten.</li>
+      <li><strong>Center crop vs. stretch</strong> — resize lurus akan mendistorsi aspek gambar, sehingga strategi crop dipilih meskipun berisiko membuang konteks tepi. Augmentasi (random crop, flip) menjadi langkah lanjutan yang relevan untuk mengurangi risiko ini.</li>
+      <li><strong>Split test sedikit tidak seimbang</strong> — kelas Rawon (48) dan Soto (49) memiliki satu hingga dua gambar lebih sedikit dibanding kelas lain (50), namun selisih ini tidak signifikan untuk evaluasi multikelas.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>6. Catatan Penggunaan</h2>
+    <p>Laporan ini merupakan ringkasan statis berbasis data aktual yang diperoleh dari inspeksi langsung folder <code>dataset/</code>. Untuk melihat visualisasi interaktif beserta galeri sampel gambar, jalankan <code>EDA_Report_Indonesian_Food.ipynb</code> secara lengkap.</p>
+    <ul>
+      <li>Total gambar dan distribusi per kelas di halaman ini berasal dari penghitungan file aktual.</li>
+      <li>Angka hasil evaluasi model (akurasi, top-3 accuracy) tersedia di notebook utama <code>Forum04-indonesian_food_question.ipynb</code>.</li>
+    </ul>
+  </section>
+</main>
+
+<script>
+  const CLASSES = ["Ayam Goreng","Burger","French Fries","Gado-Gado","Ikan Goreng","Mie Goreng","Nasi Goreng","Nasi Padang","Pizza","Rawon","Rendang","Sate","Soto"];
+  const TRAIN   = [400,400,400,398,400,399,400,400,400,399,399,400,398];
+  const VALID   = [50,50,50,50,50,50,50,50,50,50,50,50,50];
+  const TEST    = [50,50,50,50,50,50,50,50,50,48,50,50,49];
+  const C_TRAIN = "#2e86ab", C_VALID = "#f18f01", C_TEST = "#a63d40";
+
+  new Chart(document.getElementById("chartSplit"),{type:"doughnut",data:{labels:["Train (5.193)","Validation (650)","Test (647)"],datasets:[{data:[5193,650,647],backgroundColor:[C_TRAIN,C_VALID,C_TEST],borderWidth:2,borderColor:"#fffdfa"}]},options:{responsive:true,plugins:{legend:{position:"bottom",labels:{font:{size:12}}},title:{display:true,text:"Distribusi Split Dataset",font:{size:13}}}}});
+
+  new Chart(document.getElementById("chartClass"),{type:"bar",data:{labels:CLASSES,datasets:[{label:"Jumlah Gambar (Train)",data:TRAIN,backgroundColor:CLASSES.map((_,i)=>`hsl(${(i*27)%360},58%,52%)`),borderWidth:0,borderRadius:3}]},options:{indexAxis:"y",responsive:true,scales:{x:{min:390,max:405,title:{display:true,text:"Jumlah Gambar"}},y:{ticks:{font:{size:11}}}},plugins:{legend:{display:false},title:{display:true,text:"Distribusi Kelas — Train",font:{size:13}}}}});
+
+  new Chart(document.getElementById("chartAspect"),{type:"bar",data:{labels:["Landscape (w > h)","Portrait (h > w)","Square (w ≈ h)"],datasets:[{label:"Estimasi proporsi (%)",data:[55,35,10],backgroundColor:[C_TRAIN,C_VALID,"#54a24b"],borderWidth:0,borderRadius:4}]},options:{responsive:true,scales:{y:{max:80,title:{display:true,text:"%"}}},plugins:{legend:{display:false},title:{display:true,text:"Estimasi Komposisi Tipe Rasio Aspek (ilustratif)",font:{size:12}}}}});
+
+  const maxTrain=Math.max(...TRAIN);
+  const barsContainer=document.getElementById("balanceBars");
+  CLASSES.forEach((cls,i)=>{const pct=((TRAIN[i]/maxTrain)*100).toFixed(1);const color=`hsl(${(i*27)%360},58%,48%)`;barsContainer.innerHTML+=`<div class="balance-row"><span class="balance-label">${cls}</span><div class="bar-bg"><div class="bar-fill" style="width:${pct}%;background:${color};"></div></div><span class="balance-count">${TRAIN[i]}</span></div>`;});
+
+  const tbody=document.getElementById("classTable");
+  CLASSES.forEach((cls,i)=>{const total=TRAIN[i]+VALID[i]+TEST[i];tbody.innerHTML+=`<tr><td>${cls}</td><td>${TRAIN[i]}</td><td>${VALID[i]}</td><td>${TEST[i]}</td><td class="total">${total}</td></tr>`;});
+</script>
+</body>
+</html>
